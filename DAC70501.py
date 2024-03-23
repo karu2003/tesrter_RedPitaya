@@ -20,6 +20,7 @@ class DAC70501:
         self.gain = gain
         self.brd = None
         self.mux = mux
+        self.dac_ini =  False
         self.Register = {
             "DEVID": 1 << 16,
             "SYNC": 2 << 16,
@@ -29,8 +30,8 @@ class DAC70501:
             "STATUS": 7 << 16,
             "DAC_DATA": 8 << 16,
         }
-        self.init("ES")
-        self.init("SS")
+        # self.init("ES")
+        # self.init("SS")
 
     def byte_length(self, i):
         return (i.bit_length() + 7) // 8
@@ -61,12 +62,12 @@ class DAC70501:
 
     def init(self, brd):
         self.bus.pre_on(1)
-        time.sleep(0.5)
+        time.sleep(0.4)
         self.soft_reset(brd)
         self.div_gain(brd, self.dev, self.gain)
         # self.send_data(brd, "SYNC", 0x00)
         # self.send_data(brd, "CONFIG", 0x0100)
-        return
+        return True
 
     def soft_reset(self, brd):
         self.send_data(brd, "TRIGGER", sRESET)
@@ -96,6 +97,8 @@ if __name__ == "__main__":
     rp_c.gen_on(0)
     rp_c.ss_gl(0)
     rp_c.es_gl(0)
+    DAC.dac_ini = DAC.init("ES")
+    DAC.dac_ini = DAC.init("SS")
 
     for k in brd:
         MUX.set_ch(k)
@@ -114,5 +117,5 @@ if __name__ == "__main__":
     # data = rp_c.read_oneL0()
     # data = sh.voltage_divider_pre(data[0])
     # print(np.max(data))
-    # rp_c.pre_on(0)
+    rp_c.pre_on(0)
     # rp_c.spi_release()

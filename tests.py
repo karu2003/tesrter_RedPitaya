@@ -253,7 +253,7 @@ class TESTs:
         self.bus.gen_on(0)
         self.DAC.init(brd[0])
         self.DAC.send_data(brd[0], "DAC_DATA", 0x0000)
-        time.sleep(0.5)
+        time.sleep(0.7)
         result = self.adc.read_data(self.s.join(brd[:2]))
         result = self.adc.code_volt(result)
         self.error = self.check_result(result)
