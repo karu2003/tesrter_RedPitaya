@@ -44,18 +44,18 @@ class TESTs:
         self.ATT.set_loss(7)
 
         self.TEST_result = {
-            "ES_MAIN_NOISE": ["+-",0.04, 0.14],  # 0.110
+            "ES_MAIN_NOISE": ["+-", 0.04, 0.14],  # 0.110
             "ES_MAIN_GAIN_40": ["+-", 1.5, 40],
             "ES_MAIN_GAIN_60": ["+-", 1.5, 60],
             "ES_MAIN_GAIN_LOW": ["<", 50],
             "ES_MAIN_BW": ["+-", 1.5, 54, 54, 60],
-            "SS_AOUT1_NOISE": ["+-",0.04, 0.14],  # 0.140
+            "SS_AOUT1_NOISE": ["+-", 0.04, 0.14],  # 0.140
             "SS_AOUT1_GAIN_40": ["+-", 1.5, 40],
             "SS_AOUT1_GAIN_60": ["+-", 1.5, 60],
             "SS_AOUT1_GAIN_LOW": ["<", 50],
             "SS_AOUT1_BW": ["+-", 1.5, 54, 54, 60],
             "SS_ADC1": ["%", 4, 1.5],
-            "SS_AOUT2_NOISE": ["+-",0.04, 0.14],  # 0.140
+            "SS_AOUT2_NOISE": ["+-", 0.04, 0.14],  # 0.140
             "SS_AOUT2_GAIN_40": ["+-", 1.5, 40],
             "SS_AOUT2_GAIN_60": ["+-", 1.5, 60],
             "SS_AOUT2_GAIN_LOW": ["<", 50],
