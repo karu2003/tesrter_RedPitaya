@@ -1,0 +1,6 @@
+{
+    "editor.renderWhitespace": "all",
+    "editor.insertSpaces": "true",
+    "editor.detectIndentation": true,
+    "security.workspace.trust.enabled": false
+}
