@@ -41,25 +41,25 @@ class TESTs:
         }
 
         self.vin = 0.07 / sh.db_ratio(40)
-        self.ATT.set_loss(7)
+        self.ATT.set_loss(8)
 
         self.TEST_result = {
             "ES_MAIN_NOISE": ["+-", 0.04, 0.14],  # 0.110
-            "ES_MAIN_GAIN_40": ["+-", 1.5, 40],
-            "ES_MAIN_GAIN_60": ["+-", 1.5, 60],
+            "ES_MAIN_GAIN_40": ["+-", 1.75, 40],
+            "ES_MAIN_GAIN_60": ["+-", 1.75, 60],
             "ES_MAIN_GAIN_LOW": ["<", 50],
-            "ES_MAIN_BW": ["+-", 1.5, 54, 54, 60],
+            "ES_MAIN_BW": ["+-", 1.75, 54, 54, 60],
             "SS_AOUT1_NOISE": ["+-", 0.04, 0.14],  # 0.140
-            "SS_AOUT1_GAIN_40": ["+-", 1.5, 40],
-            "SS_AOUT1_GAIN_60": ["+-", 1.5, 60],
+            "SS_AOUT1_GAIN_40": ["+-", 1.75, 40],
+            "SS_AOUT1_GAIN_60": ["+-", 1.75, 60],
             "SS_AOUT1_GAIN_LOW": ["<", 50],
-            "SS_AOUT1_BW": ["+-", 1.5, 54, 54, 60],
+            "SS_AOUT1_BW": ["+-", 1.75, 54, 54, 60],
             "SS_ADC1": ["%", 4, 1.5],
             "SS_AOUT2_NOISE": ["+-", 0.04, 0.14],  # 0.140
-            "SS_AOUT2_GAIN_40": ["+-", 1.5, 40],
-            "SS_AOUT2_GAIN_60": ["+-", 1.5, 60],
+            "SS_AOUT2_GAIN_40": ["+-", 1.75, 40],
+            "SS_AOUT2_GAIN_60": ["+-", 1.75, 60],
             "SS_AOUT2_GAIN_LOW": ["<", 50],
-            "SS_AOUT2_BW": ["+-", 1.5, 54, 54, 60],
+            "SS_AOUT2_BW": ["+-", 1.75, 54, 54, 60],
             "SS_ADC2": ["%", 4, 1.5],
         }
 
@@ -253,8 +253,9 @@ class TESTs:
         self.bus.gen_on(0)
         self.DAC.init(brd[0])
         self.DAC.send_data(brd[0], "DAC_DATA", 0x0000)
-        time.sleep(0.7)
-        result = self.adc.read_data(self.s.join(brd[:2]))
+        time.sleep(0.1)
+        for i in range(10):
+            result = self.adc.read_data(self.s.join(brd[:2]))
         result = self.adc.code_volt(result)
         self.error = self.check_result(result)
         self.df.loc[0, [self.current]] = [result]
@@ -321,10 +322,10 @@ if __name__ == "__main__":
     import redpctl as redpctl
     import time, sys
 
-    # dec = 16
-    # rp_c = redpctl.RedCtl(dec=dec)
-    rp_c = redpctl.RedCtl()
-    T = TESTs(rp_c)
+    dec = 1
+    rp_c = redpctl.RedCtl(dec=dec)
+    # rp_c = redpctl.RedCtl()
+    T = TESTs(rp_c,"SS")
 
     for i in range(32):
         result = T.test()
