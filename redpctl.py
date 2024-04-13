@@ -281,6 +281,13 @@ class RedCtl:
         self.rp_s.tx_txt("SPI:PASS")
         # self.rp_s.tx_txt("SPI:MSG:DEL")
         return
+    
+    def send_spi_msc1(self, msg):
+        # self.rp_s.tx_txt("SPI:MSG:CREATE 1")
+        self.rp_s.tx_txt("SPI:MSG0:TX1 " + msg)
+        self.rp_s.tx_txt("SPI:PASS")
+        # self.rp_s.tx_txt("SPI:MSG:DEL")
+        return
 
     def read_spi_msc(self):
         self.rp_s.tx_txt("SPI:MSG0:RX3")
