@@ -39,10 +39,10 @@ if __name__ == "__main__":
     brd = ["ES_LIM", "ES_MAIN"]
     msg = AMP.GAIN_HEX
 
-    rp_c.gen_on(0)
+    # rp_c.gen_on(0)
     rp_c.ss_gl(0)
     rp_c.pre_on(1)
-    rp_c.adc1_2(1)
+    rp_c.adc1_2(0)
     MUX.set_ch("ES_LIM") # "ES_LIM" "ES_MAIN"
     AMP.send_8bit_int(msg[-1])
 
