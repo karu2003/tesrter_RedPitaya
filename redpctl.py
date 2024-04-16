@@ -117,6 +117,29 @@ class RedCtl:
         self.data.append(arr)
         self.rp_s.tx_txt("ACQ:STOP")
         return self.data
+    
+    def read_now(self):
+
+        self.data.clear()
+        self.rp_s.tx_txt("ACQ:DEC %d" % self.dec)
+        self.rp_s.tx_txt("ACQ:START")
+        self.rp_s.tx_txt("ACQ:TRIG NOW")
+
+        while 1:
+            self.rp_s.tx_txt("ACQ:TRIG:STAT?")
+            if self.rp_s.rx_txt() == "TD":
+                break
+
+        while 1:
+            self.rp_s.tx_txt("ACQ:TRIG:FILL?")
+            if self.rp_s.rx_txt() == "1":
+                break
+
+        buff = self.rp_s.acq_data(1, old=False, num_samples=16384, convert=True)
+        arr = np.array(buff)
+        self.data.append(arr)
+        self.rp_s.tx_txt("ACQ:STOP")
+        return self.data
 
     def set_trig(self, trig_lev=0.2, ch=1):
         self.trig_lev = trig_lev
@@ -273,6 +296,23 @@ class RedCtl:
         self.rp_s.tx_txt("SPI:SET:WORD 8")
         self.rp_s.tx_txt("SPI:SET:SET")
         self.rp_s.tx_txt("SPI:MSG:CREATE 1")
+        return
+    
+    def spi_csmode(self, mode):
+        print("SPI:SET:CSMODE "+ mode)
+        self.rp_s.tx_txt("SPI:SET:CSMODE "+ mode)
+        self.rp_s.tx_txt("SPI:SET:SET")
+        return
+    
+    def spi_mode(self, mode):
+        """
+        - LISL = Low idle level, Sample on leading edge
+        - LIST = Low idle level, Sample on trailing edge
+        - HISL = High idle level, Sample on leading edge
+        - HIST = High idle level, Sample on trailing edge
+        """
+        self.rp_s.tx_txt("SPI:SET:MODE " + mode)
+        self.rp_s.tx_txt("SPI:SET:SET")
         return
 
     def send_spi_msc(self, msg):
