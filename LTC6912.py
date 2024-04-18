@@ -34,10 +34,9 @@ class LTC6912:
                     result_dict[k] = round(sh.rms(data), 3)
         return result_dict
     
-    def read_same_level(self, thresh = 0.01):
+    def read_same_level(self, thresh = 0.01, slice = 100):
         sub = 1
         cnt = 0
-        slice = 100
         while sub >= thresh:
             data = []
             data = self.bus.read_now()
@@ -73,89 +72,42 @@ if __name__ == "__main__":
     F = [26000., 60000., 150000.]
     brd = ["18", "40", "HS"]
 
-    ampl = 0.05
+    ampl = 0.07
     vin = ((ampl / np.sqrt(2))/ sh.db_ratio(40))/sh.db_ratio(att_loss)
 
-    rp_c.set_gen(wave_form="sine", freq=26000., ampl=ampl)
-    rp_c.gen_on(0)
-    rp_c.adc1_2(1)
-    time.sleep(0.1)
-    rp_c.ss_gl(1)
-    lim_max = 0.125 # Noise
-    main_max = 0.165 # Noise
-    sub_gl = 0.150 # Gain Low
-    number = 0
-
-    while 0:#number <= 5000:
-        rp_c.pre_on(1)
-        MUX.set_ch("ES_MAIN") 
-        time.sleep(0.1)
-        # Noise Main
-        AMP.send_8bit_int(0x77)
-        # time.sleep(0.1)
-        data = rp_c.read_oneL0()
-        y = sh.butter_lowpass_filter(
-                    data[0], lowcut, rp_c.fs, order=5)
-        data = sh.voltage_divider_pre(y)
-        # data = sh.voltage_divider_pre(data[0])
-        # print(data)
-        main_result = sh.rms(data)
-
-        if main_result > main_max:
-            main_max = main_result
-            # print("Noise main Max ",main_max)
-
-        MUX.set_ch("ES_LIM")
-        time.sleep(0.1)
-
-        # Noise Lim
-        data = rp_c.read_oneL0()
-        y = sh.butter_lowpass_filter(
-                    data[0], lowcut, rp_c.fs, order=5)
-        data = sh.voltage_divider_pre(y)
-        # data = sh.voltage_divider_pre(data[0])
-        lim_result = sh.rms(data)
-        if lim_result > lim_max:
-            lim_max = lim_result
-            # print("Noise main Lim ",lim_max)
-        
-        rp_c.pre_on(0)
-        time.sleep(0.5)
-        number = number + 1
-
-    # print("Noise main ",main_max)
-    # print("Noise Lim ",lim_max)
-
-    MUX.set_ch("ES_MAIN")
+    MUX.set_ch("ES_LIM")
     time.sleep(0.1) 
     rp_c.gen_on(1)
     rp_c.adc1_2(1)
-
     rp_c.ss_gl(0)
     rp_c.pre_on(1)
 
-    # result_dict_H = AMP.test_db(vin)
-    # rp_c.ss_gl(1)
-    # result_dict_L = AMP.test_db(vin)
 
-    # # print(result_dict_H)
-    # # print(result_dict_L)
-    # for k, v in result_dict_H.items():
-    #     print(v - result_dict_L[k])
+    rp_c.set_gen(wave_form="sine", freq=F[2], ampl=ampl)
+    time.sleep(0.5)
 
-    AMP.send_8bit_int(0x66)
-    brd_rms = []
-    for i in F:
-        # print("F",i)
-        rp_c.set_gen(wave_form="sine", freq=i, ampl=ampl)
-        time.sleep(1)
-        data = AMP.read_same_level(thresh = 0.1)
-        # print("MAX",np.max(data))
-        brd_rms.append(round(sh.rms(data), 3))
+    data = AMP.read_same_level(thresh = 0.05, slice = 100)
+    rms90 = sh.rms(data)
+    ratio90= sh.ratio_db(rms90,vin)
+    print(ratio90)
+    fw = 56000.0
 
-    # print("RMS",brd_rms)
-    print(brd[np.argmax(brd_rms)])
+    while 1:
+        print(fw)
+        rp_c.set_gen(wave_form="sine", freq=fw, ampl=ampl)
+        time.sleep(0.5)
+        data = AMP.read_same_level(thresh = 0.05, slice = 100)
+        rms = sh.rms(data)
+        ratio = sh.ratio_db(rms,vin)
+        print("ratio",ratio)
+        sub = ratio90 - ratio
+        print(sub)
+        error = sh.checking_width(0.1, 3, abs(sub))
+        if not error:
+            break
+        print(error)
+        fw += 100
 
 
 
-    rp_c.pre_on(0)
+    # rp_c.pre_on(0)
