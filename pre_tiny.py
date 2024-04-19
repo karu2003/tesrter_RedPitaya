@@ -35,7 +35,7 @@ class PRE_TESTs:
         self.current_brd = None
         self.rms90 = 0
 
-        self.ampl = 0.07
+        self.ampl = 0.1
         self.vin = ((self.ampl / np.sqrt(2))/ sh.db_ratio(40))/sh.db_ratio(self.att_loss)
 
         self.TEST_all = [
@@ -65,14 +65,14 @@ class PRE_TESTs:
             "MAIN_GAIN_LOW": ["+-", 1.5, 42],
             "MAIN_BW": ["+-", 1.0, 60, 6, 6],
             "LIM_NOISE": [">", 0.350],
-            "LIM_BW": ["+-", 1.0, 62, 6, 6],
+            "LIM_BW": ["+-", 1.0, 100, 6, 6],
         }
 
         self.BRD_setting = {
         #    Noise Gain  lowcut Gain db -6db -6db mid lim -3bd -3db
-            "18": [0x66,  80000., 0x26, 11600., 52200., 26000.,5300., 67900.],  # BW Gain Low  11800.0 53800.0
-            "40": [0x66, 130000., 0x26, 26800.,103500., 60000.,12700.,143300.], # BW Gain Low  27700.0 113100.0
-            "HS": [0x55, 300000., 0x26, 58800.,209500.,150000.,30100.,335100.], # BW Gain Low  67300.0 218200.0
+            "18": [0x66,  80000., 0x26, 11600., 52200., 26000.,10850., 57900.],
+            "40": [0x66, 130000., 0x26, 26800.,103500., 60000.,25550.,124000.],
+            "HS": [0x55, 300000., 0x26, 58700.,209700.,150000.,56850.,290300.],
         }
     def test(self, brd=None):
         if self.current == None:
@@ -93,7 +93,7 @@ class PRE_TESTs:
             self.result = self.brd_noise()
 
 
-        elif self.current == "MAIN_GAIN_90":
+        elif self.current == "MAIN_GAIN_60":
             self.result = self.brd_db()
         
         elif self.current == "MAIN_GAIN_LOW":
@@ -119,7 +119,7 @@ class PRE_TESTs:
         self.bus.adc1_2(1)
         self.bus.ss_gl(0)
         self.bus.pre_on(1)
-        self.AMP.send_8bit_int(0x66)
+        self.AMP.send_8bit_int(38)
         brd_rms = []
         for i in self.id_f:
             self.bus.set_gen(wave_form="sine", freq=i, ampl=self.ampl)
@@ -165,9 +165,9 @@ class PRE_TESTs:
         self.bus.gen_on(1)
         self.bus.ss_gl(1)
         self.AMP.send_8bit_int(self.BRD_setting[self.current_brd][2])
-        time.sleep(0.5)
+        time.sleep(0.2)
         data = self.AMP.read_same_level(thresh = 0.05, slice = 100)
-        result = self.rms90 - sh.rms(data)
+        result = sh.ratio_db(sh.rms(data),self.vin)
         self.error = self.check_result(result)
         self.df.loc[0, [self.current]] = [result]
         return self.print_tests(result)
@@ -191,14 +191,14 @@ class PRE_TESTs:
         return self.print_tests(result)
 
     def lim_bw(self):
-        self.ampl = 0.07
-        self.vin = ((self.ampl / np.sqrt(2))/ sh.db_ratio(40))/sh.db_ratio(self.att_loss)
+        self.bus.gen_on(1)
+        self.ATT.set_loss(int(30))
+        self.bus.ss_gl(1)
+        self.vin = ((self.ampl / np.sqrt(2))/ sh.db_ratio(40))/sh.db_ratio(30)/sh.db_ratio(20)
         result = []
         for i in (5,6,7):
             self.bus.set_gen(wave_form="sine", freq=self.BRD_setting[self.current_brd][i], ampl=self.ampl)
-            self.bus.gen_on(1)
             time.sleep(0.5)
-            self.bus.ss_gl(0)
             data = self.AMP.read_same_level(thresh = 0.05, slice = 100)
             if result == []:
                 result.append(sh.ratio_db(sh.rms(data), self.vin))

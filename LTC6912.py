@@ -54,7 +54,7 @@ class LTC6912:
                 result_dict[k,m] = result, 3
                 error = sh.checking_width(width, pattern, abs(result))
                 if not error:
-                    print(f"{(v<<4|n):5}", f"{result:<10}", f"{round(rms,3):<10}")
+                    print(f'{format(v<<4|n, "#04x"):5}', f"{result:<10}", f"{round(rms,3):<10}")
 
         return result_dict
     
@@ -124,62 +124,66 @@ if __name__ == "__main__":
 
     BRD_setting = {
         #    main -6db -6db lim -3bd -3db
-            "18": [10000., 51000., 5000., 65000.],
-            "40": [26000., 100000., 12000.,143000.],
-            "HS": [55000., 207000., 29000.,310000.],
+            "18": [10000., 51000., 10000., 56000.],
+            "40": [26000., 100000., 21000.,115000.],
+            "HS": [55000., 207000., 55000.,270000.],
         }
 
-    # data = AMP.read_same_level(thresh = 0.01, slice = 100)
-    # rms60 = sh.rms(data)
-    # ratio60= sh.ratio_db(rms60,vin)
-    # print("Ratio 60",ratio60)
+    if 0: # search for F-low and F-high main band-pass filter.
+        data = AMP.read_same_level(thresh = 0.01, slice = 100)
+        rms60 = sh.rms(data)
+        ratio60= sh.ratio_db(rms60,vin)
+        print("Ratio 60",ratio60)
+        
+        for i in (0,1):
+            start_F = BRD_setting[current_brd][i]
+            while 1:
+                print('.', end='', flush=True)
+                rp_c.set_gen(wave_form="sine", freq=start_F, ampl=ampl)
+                time.sleep(0.5)
+                data = AMP.read_same_level(thresh = 0.05, slice = 100)
+                rms = sh.rms(data)
+                ratio = sh.ratio_db(rms,vin)
+                sub = ratio60 - ratio
+                # print(start_F,"ratio",ratio, sub)
+                error = sh.checking_width(0.1, 6, abs(sub))
+                if not error:
+                    print("")
+                    print("frequency",start_F,"ratio",ratio, sub)
+                    break
+                start_F += 100
     
-    # for i in (0,1):
-    #     start_F = BRD_setting[current_brd][i]
-    #     while 1:
-    #         print('.', end='', flush=True)
-    #         rp_c.set_gen(wave_form="sine", freq=start_F, ampl=ampl)
-    #         time.sleep(0.5)
-    #         data = AMP.read_same_level(thresh = 0.05, slice = 100)
-    #         rms = sh.rms(data)
-    #         ratio = sh.ratio_db(rms,vin)
-    #         sub = ratio60 - ratio
-    #         # print(start_F,"ratio",ratio, sub)
-    #         error = sh.checking_width(0.1, 6, abs(sub))
-    #         if not error:
-    #             print("")
-    #             print("frequency",start_F,"ratio",ratio, sub)
-    #             break
-    #         start_F += 100
-    
- 
-    MUX.set_ch("ES_LIM")
-    time.sleep(0.1)
-    ATT.set_loss(int(30))
-    # rp_c.ss_gl(1)
+    if 1: # search for F-low and F-high amplifier limiter 
+        MUX.set_ch("ES_LIM")
+        time.sleep(0.1)
+        ATT.set_loss(int(30))
+        rp_c.ss_gl(1)
+        vin = ((ampl / np.sqrt(2))/ sh.db_ratio(40))/sh.db_ratio(30)/sh.db_ratio(20)
+        print("Vin", vin)
 
-    data = AMP.read_same_level(thresh = 0.01, slice = 100)
-    rmsLIM = sh.rms(data)
-    ratioLIM= sh.ratio_db(rmsLIM,vin)
-    print("Ratio LIM",ratioLIM)
+        data = AMP.read_same_level(thresh = 0.01, slice = 100)
+        rmsLIM = sh.rms(data)
+        ratioLIM= sh.ratio_db(rmsLIM,vin)
+               
+        print(f'{format(rmsLIM, ".3f"):5}', "Ratio LIM",ratioLIM)
 
-    
-    for i in (2,3):
-        start_F = BRD_setting[current_brd][i]
-        while 1:
-            print('.', end='', flush=True)
-            rp_c.set_gen(wave_form="sine", freq=start_F, ampl=ampl)
-            time.sleep(0.5)
-            data = AMP.read_same_level(thresh = 0.05, slice = 100)
-            rms = sh.rms(data)
-            ratio = sh.ratio_db(rms,vin)
-            sub = ratioLIM - ratio
-            # print(start_F,"ratio",ratio, sub)
-            error = sh.checking_width(0.5, 6, abs(sub))
-            if not error:
-                print("")
-                print("frequency",start_F,"ratio",ratio, sub)
-                break
-            start_F += 100
+        
+        for i in (2,3):
+            start_F = BRD_setting[current_brd][i]
+            while 1:
+                print('.', end='', flush=True)
+                rp_c.set_gen(wave_form="sine", freq=start_F, ampl=ampl)
+                time.sleep(0.2)
+                data = AMP.read_same_level(thresh = 0.05, slice = 100)
+                rms = sh.rms(data)
+                ratio = sh.ratio_db(rms,vin)
+                sub = ratioLIM - ratio
+                # print(start_F,"ratio",f'{ratio:.3f}', f'{sub:.3f}')
+                error = sh.checking_width(0.5, 6, abs(sub))
+                if not error:
+                    print("")
+                    print("frequency",start_F,"ratio", f'{ratio:.3f}', f'{sub:.3f}')
+                    break
+                start_F += 50.
 
-    # rp_c.pre_on(0)
+    rp_c.pre_on(0)
