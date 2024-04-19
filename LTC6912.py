@@ -10,9 +10,15 @@ class LTC6912:
         self.bus = bus
         self.GAIN_dB =  ["-120",  "0",  "6", "12", "18.1", "24.1", "30.1", "36.1", "-12x"]
         self.GAIN_HEX = [  0x00, 0x11, 0x22, 0x33,   0x44,   0x55,   0x66,   0x77,   0x88]
-        self.bus.spi_mode("HIST")
-        # self.GAIN = {self.GAIN_dB[i]: self.GAIN_HEX[i] for i in range(len(self.GAIN_dB))}
+        self.GAIN_dB1 =  [  "0",  "6", "12", "18.1", "24.1", "30.1", "36.1"]
+        self.GAIN_HEX1 = [ 0x01, 0x02, 0x03,   0x04,   0x05,   0x06,   0x07]
+        # self.bus.spi_mode("HIST")
+        # # self.GAIN = {self.GAIN_dB[i]: self.GAIN_HEX[i] for i in range(len(self.GAIN_dB))}
         self.GAIN = dict(map(lambda i,j : (i,j) , self.GAIN_dB,self.GAIN_HEX))
+        self.GAIN1 = dict(map(lambda i,j : (i,j) , self.GAIN_dB1,self.GAIN_HEX1))
+        self.F = [26000., 60000., 150000.]
+        self.brd = ["18", "40", "HS"]
+        self.brd_dict = dict(map(lambda i,j : (i,j) , self.brd,self.F))
 
     def send_8bit_int(self, i):
         self.bus.send_spi_msc1(msg=str(i))
@@ -26,13 +32,39 @@ class LTC6912:
         for k, v in self.GAIN.items():
             if k in ("0","6", "12", "18.1", "24.1", "30.1"):
                 print("Gain db",k)
+                print("gain V ",v)
                 self.send_8bit_int(v)
                 data = self.read_same_level()
                 result = sh.rms(data)
+                print("RMS",result)
                 result = sh.ratio_db(result, vin)
-                if k in ("6", "12", "18.1", "24.1", "30.1"):
+                print("Ratio", result)
+                if k in ("0","6", "12", "18.1", "24.1", "30.1"):
                     result_dict[k] = round(sh.rms(data), 3)
         return result_dict
+    
+    def find_gain(self, vin, width, pattern):
+        result_dict = {}
+        for k, v in self.GAIN1.items():
+            for m, n in self.GAIN1.items():
+                self.send_8bit_int(v<<4|n)
+                data = self.read_same_level()
+                rms = sh.rms(data)
+                result = round(sh.ratio_db(rms, vin),3)
+                result_dict[k,m] = result, 3
+                error = sh.checking_width(width, pattern, abs(result))
+                if not error:
+                    print(f"{(v<<4|n):5}", f"{result:<10}", f"{round(rms,3):<10}")
+
+        return result_dict
+    
+    def brd_id(self, ampl):
+        for i in self.F:
+            rp_c.set_gen(wave_form="sine", freq=i, ampl=ampl)
+            data = AMP.read_same_level(thresh = 0.1)
+            brd_rms.append(round(sh.rms(data), 3))
+        return self.brd[np.argmax(brd_rms)]
+
     
     def read_same_level(self, thresh = 0.01, slice = 100):
         sub = 1
@@ -64,50 +96,90 @@ if __name__ == "__main__":
     MUX = LTC1380(rp_c)
     ATT = Attenuator(rp_c)
     AMP = LTC6912(rp_c)
-    att_loss = 30.
+    att_loss = 5.
     ATT.set_loss(int(att_loss))
     brd_ch = ["ES_LIM", "ES_MAIN"]
     lowcut = 3e5
 
-    F = [26000., 60000., 150000.]
-    brd = ["18", "40", "HS"]
+    brd_dict = dict(map(lambda i,j : (i,j) , AMP.brd,AMP.F))
 
-    ampl = 0.07
+    ampl = 0.1
     vin = ((ampl / np.sqrt(2))/ sh.db_ratio(40))/sh.db_ratio(att_loss)
+    brd_rms = []
 
-    MUX.set_ch("ES_LIM")
+    MUX.set_ch("ES_MAIN")
     time.sleep(0.1) 
     rp_c.gen_on(1)
     rp_c.adc1_2(1)
     rp_c.ss_gl(0)
     rp_c.pre_on(1)
 
+    AMP.send_8bit_int(38)
+    current_brd = AMP.brd_id(ampl)
 
-    rp_c.set_gen(wave_form="sine", freq=F[2], ampl=ampl)
-    time.sleep(0.5)
+    print(current_brd, "F = ", AMP.brd_dict[current_brd])
+    
+    rp_c.set_gen(wave_form="sine", freq=AMP.brd_dict[current_brd], ampl=ampl)
+    # db_s = AMP.find_gain(vin, 2 ,60)
 
-    data = AMP.read_same_level(thresh = 0.05, slice = 100)
-    rms90 = sh.rms(data)
-    ratio90= sh.ratio_db(rms90,vin)
-    print(ratio90)
-    fw = 56000.0
+    BRD_setting = {
+        #    main -6db -6db lim -3bd -3db
+            "18": [10000., 51000., 5000., 65000.],
+            "40": [26000., 100000., 12000.,143000.],
+            "HS": [55000., 207000., 29000.,310000.],
+        }
 
-    while 1:
-        print(fw)
-        rp_c.set_gen(wave_form="sine", freq=fw, ampl=ampl)
-        time.sleep(0.5)
-        data = AMP.read_same_level(thresh = 0.05, slice = 100)
-        rms = sh.rms(data)
-        ratio = sh.ratio_db(rms,vin)
-        print("ratio",ratio)
-        sub = ratio90 - ratio
-        print(sub)
-        error = sh.checking_width(0.1, 3, abs(sub))
-        if not error:
-            break
-        print(error)
-        fw += 100
+    # data = AMP.read_same_level(thresh = 0.01, slice = 100)
+    # rms60 = sh.rms(data)
+    # ratio60= sh.ratio_db(rms60,vin)
+    # print("Ratio 60",ratio60)
+    
+    # for i in (0,1):
+    #     start_F = BRD_setting[current_brd][i]
+    #     while 1:
+    #         print('.', end='', flush=True)
+    #         rp_c.set_gen(wave_form="sine", freq=start_F, ampl=ampl)
+    #         time.sleep(0.5)
+    #         data = AMP.read_same_level(thresh = 0.05, slice = 100)
+    #         rms = sh.rms(data)
+    #         ratio = sh.ratio_db(rms,vin)
+    #         sub = ratio60 - ratio
+    #         # print(start_F,"ratio",ratio, sub)
+    #         error = sh.checking_width(0.1, 6, abs(sub))
+    #         if not error:
+    #             print("")
+    #             print("frequency",start_F,"ratio",ratio, sub)
+    #             break
+    #         start_F += 100
+    
+ 
+    MUX.set_ch("ES_LIM")
+    time.sleep(0.1)
+    ATT.set_loss(int(30))
+    # rp_c.ss_gl(1)
 
+    data = AMP.read_same_level(thresh = 0.01, slice = 100)
+    rmsLIM = sh.rms(data)
+    ratioLIM= sh.ratio_db(rmsLIM,vin)
+    print("Ratio LIM",ratioLIM)
 
+    
+    for i in (2,3):
+        start_F = BRD_setting[current_brd][i]
+        while 1:
+            print('.', end='', flush=True)
+            rp_c.set_gen(wave_form="sine", freq=start_F, ampl=ampl)
+            time.sleep(0.5)
+            data = AMP.read_same_level(thresh = 0.05, slice = 100)
+            rms = sh.rms(data)
+            ratio = sh.ratio_db(rms,vin)
+            sub = ratioLIM - ratio
+            # print(start_F,"ratio",ratio, sub)
+            error = sh.checking_width(0.5, 6, abs(sub))
+            if not error:
+                print("")
+                print("frequency",start_F,"ratio",ratio, sub)
+                break
+            start_F += 100
 
     # rp_c.pre_on(0)

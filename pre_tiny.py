@@ -18,7 +18,7 @@ class PRE_TESTs:
         self.MUX = LTC1380(self.bus)
         self.ATT = Attenuator(self.bus)
         self.AMP = LTC6912(self.bus)
-        self.att_loss = 30.
+        self.att_loss = 5.
         self.ATT.set_loss(int(self.att_loss))
 
         self.bus.pre_on(0)
@@ -41,7 +41,7 @@ class PRE_TESTs:
         self.TEST_all = [
             "BRD_ID",
             "MAIN_NOISE",
-            "MAIN_GAIN_90",
+            "MAIN_GAIN_60",
             "MAIN_GAIN_LOW",
             "MAIN_BW",
             "LIM_NOISE",
@@ -59,22 +59,21 @@ class PRE_TESTs:
             self.TEST_name.append(text)
         
         self.TEST_result = {
-            "BRD_ID": ["<", 0.900],
+            "BRD_ID": ["<", 0.300],
             "MAIN_NOISE": [">", 0.250],
-            "MAIN_GAIN_90": ["+-", 1.75, 93],
-            "MAIN_GAIN_LOW": ["<", 0.09],
-            "MAIN_BW": ["+-", 1.0, 93, 6, 6],
+            "MAIN_GAIN_60": ["+-", 3.0, 60],
+            "MAIN_GAIN_LOW": ["+-", 1.5, 42],
+            "MAIN_BW": ["+-", 1.0, 60, 6, 6],
             "LIM_NOISE": [">", 0.350],
-            "LIM_BW": ["+-", 1.0, 90, 3, 3],
+            "LIM_BW": ["+-", 1.0, 62, 6, 6],
         }
 
         self.BRD_setting = {
         #    Noise Gain  lowcut Gain db -6db -6db mid lim -3bd -3db
-            "18": [0x66,  80000., 0x65, 11700., 54400., 26000.,9100., 55500.],
-            "40": [0x66, 130000., 0x65, 28300.,110500., 60000.,22500.,122500.],
-            "HS": [0x55, 300000., 0x65, 67000.,215000.,150000.,57500.,309000.],
+            "18": [0x66,  80000., 0x26, 11600., 52200., 26000.,5300., 67900.],  # BW Gain Low  11800.0 53800.0
+            "40": [0x66, 130000., 0x26, 26800.,103500., 60000.,12700.,143300.], # BW Gain Low  27700.0 113100.0
+            "HS": [0x55, 300000., 0x26, 58800.,209500.,150000.,30100.,335100.], # BW Gain Low  67300.0 218200.0
         }
-    
     def test(self, brd=None):
         if self.current == None:
             self.counter = 0
