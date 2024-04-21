@@ -294,5 +294,5 @@ if __name__ == "__main__":
         if T.last:
             break
 
-    # rp_c.pre_on(0)
+    rp_c.pre_on(0)
     # T.save_log()

@@ -325,7 +325,7 @@ if __name__ == "__main__":
     dec = 1
     rp_c = redpctl.RedCtl(dec=dec)
     # rp_c = redpctl.RedCtl()
-    T = TESTs(rp_c,"SS")
+    T = TESTs(rp_c, "SS")
 
     for i in range(32):
         result = T.test()

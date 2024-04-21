@@ -20,7 +20,7 @@ class DAC70501:
         self.gain = gain
         self.brd = None
         self.mux = mux
-        self.dac_ini =  False
+        self.dac_ini = False
         self.Register = {
             "DEVID": 1 << 16,
             "SYNC": 2 << 16,

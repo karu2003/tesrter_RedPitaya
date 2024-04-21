@@ -117,7 +117,7 @@ class RedCtl:
         self.data.append(arr)
         self.rp_s.tx_txt("ACQ:STOP")
         return self.data
-    
+
     def read_now(self):
 
         self.data.clear()
@@ -297,13 +297,13 @@ class RedCtl:
         self.rp_s.tx_txt("SPI:SET:SET")
         self.rp_s.tx_txt("SPI:MSG:CREATE 1")
         return
-    
+
     def spi_csmode(self, mode):
-        print("SPI:SET:CSMODE "+ mode)
-        self.rp_s.tx_txt("SPI:SET:CSMODE "+ mode)
+        print("SPI:SET:CSMODE " + mode)
+        self.rp_s.tx_txt("SPI:SET:CSMODE " + mode)
         self.rp_s.tx_txt("SPI:SET:SET")
         return
-    
+
     def spi_mode(self, mode):
         """
         - LISL = Low idle level, Sample on leading edge
@@ -321,7 +321,7 @@ class RedCtl:
         self.rp_s.tx_txt("SPI:PASS")
         # self.rp_s.tx_txt("SPI:MSG:DEL")
         return
-    
+
     def send_spi_msc1(self, msg):
         # self.rp_s.tx_txt("SPI:MSG:CREATE 1")
         self.rp_s.tx_txt("SPI:MSG0:TX1 " + msg)
