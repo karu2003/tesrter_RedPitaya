@@ -130,6 +130,7 @@ class PRE_TESTs:
             data = self.AMP.read_same_level(thresh = 0.1)
             brd_rms.append(round(sh.rms(data), 3))
         result= np.max(brd_rms)
+        print(brd_rms)
         self.error = self.check_result(result)
         self.current_brd = self.brd[np.argmax(brd_rms)]
         self.df.loc[0, [self.current]] = [self.current_brd]
@@ -160,7 +161,7 @@ class PRE_TESTs:
         time.sleep(0.5)
         data = self.AMP.read_same_level(thresh = 0.05, slice = 100)
         result = round(sh.rms(data),6)
-        print("brd db",result, self.vin)
+        # print("brd db",result, self.vin)
         self.rms60 = result
         result = sh.ratio_db(result, self.vin)
         self.error = self.check_result(result)
