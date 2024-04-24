@@ -158,6 +158,8 @@ class MainWindow(uiclass, baseclass, object):
                         "Test Passed",
                         self.GREEN,
                     )
+                    self.Tests.current_brd = None
+                    self.btn_ch.setText(self.Tests.current_brd)
                     self.Tests.save_log()
 
     def start(self):

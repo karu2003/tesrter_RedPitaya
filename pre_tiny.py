@@ -33,10 +33,10 @@ class PRE_TESTs:
         self.id_f = [26000., 60000., 150000.]
         self.brd = ["18", "40", "HS"]
         self.current_brd = None
-        self.rms90 = 0
+        self.rms60 = 0
 
         self.ampl = 0.1
-        self.vin = ((self.ampl / np.sqrt(2))/ sh.db_ratio(40))/sh.db_ratio(self.att_loss)
+        self.vin = round(((self.ampl / np.sqrt(2))/ sh.db_ratio(40))/sh.db_ratio(self.att_loss),6)
 
         self.TEST_all = [
             "BRD_ID",
@@ -113,6 +113,11 @@ class PRE_TESTs:
         return self.result
     
     def brd_id(self):
+        self.vin = round(((self.ampl / np.sqrt(2))/ sh.db_ratio(40))/sh.db_ratio(self.att_loss),6)
+        self.ATT.set_loss(int(5))
+        self.error = False
+        self.current_brd = None
+        brd_rms = []
         self.MUX.set_ch("ES_MAIN")
         time.sleep(0.1) 
         self.bus.gen_on(1)
@@ -120,7 +125,6 @@ class PRE_TESTs:
         self.bus.ss_gl(0)
         self.bus.pre_on(1)
         self.AMP.send_8bit_int(38)
-        brd_rms = []
         for i in self.id_f:
             self.bus.set_gen(wave_form="sine", freq=i, ampl=self.ampl)
             data = self.AMP.read_same_level(thresh = 0.1)
@@ -147,14 +151,17 @@ class PRE_TESTs:
         return self.print_tests(result)
 
     def brd_db(self):
+        self.rms60 = 0
         self.bus.set_gen(wave_form="sine", freq=self.BRD_setting[self.current_brd][5], ampl=self.ampl)
         self.bus.gen_on(1)
+        time.sleep(0.2)
         self.bus.ss_gl(0)
         self.AMP.send_8bit_int(self.BRD_setting[self.current_brd][2])
         time.sleep(0.5)
         data = self.AMP.read_same_level(thresh = 0.05, slice = 100)
-        result = sh.rms(data)
-        self.rms90 = result
+        result = round(sh.rms(data),6)
+        print("brd db",result, self.vin)
+        self.rms60 = result
         result = sh.ratio_db(result, self.vin)
         self.error = self.check_result(result)
         self.df.loc[0, [self.current]] = [result]
@@ -167,7 +174,7 @@ class PRE_TESTs:
         self.AMP.send_8bit_int(self.BRD_setting[self.current_brd][2])
         time.sleep(0.2)
         data = self.AMP.read_same_level(thresh = 0.05, slice = 100)
-        result = sh.ratio_db(sh.rms(data),self.vin)
+        result = round(sh.ratio_db(sh.rms(data),self.vin),6)
         self.error = self.check_result(result)
         self.df.loc[0, [self.current]] = [result]
         return self.print_tests(result)
