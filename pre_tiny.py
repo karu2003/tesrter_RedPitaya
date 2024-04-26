@@ -285,11 +285,24 @@ class PRE_TESTs:
         )
 
 
+def getch():
+    import sys, tty, termios
+
+    old_settings = termios.tcgetattr(0)
+    new_settings = old_settings[:]
+    new_settings[3] &= ~termios.ICANON
+    try:
+        termios.tcsetattr(0, termios.TCSANOW, new_settings)
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(0, termios.TCSANOW, old_settings)
+
+    return ch
+
 
 if __name__ == "__main__":
     import redpctl as redpctl
     import time, sys
-    import getch
     import termios
 
     dec = 32
@@ -308,11 +321,11 @@ if __name__ == "__main__":
                 break
 
         rp_c.pre_on(0)
-        T.save_log()
+        # T.save_log()
 
-        termios.tcflush(sys.stdin, termios.TCIOFLUSH)
         print("Press ENTER or SPACE to run test again, or any other key to exit.")
-        c = getch.getch()
+        termios.tcflush(sys.stdin, termios.TCIOFLUSH)
+        c = getch()
 
         run_test = False
         if c == "\r" or c == "\n" or c == " ":
