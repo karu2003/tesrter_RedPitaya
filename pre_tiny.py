@@ -289,18 +289,31 @@ class PRE_TESTs:
 if __name__ == "__main__":
     import redpctl as redpctl
     import time, sys
+    import getch
+    import termios
 
     dec = 32
     rp_c = redpctl.RedCtl(dec=dec)
-    T = PRE_TESTs(rp_c)
 
-    for i in range(32):
-        result = T.test()
-        if T.error:
-            print("error")
-            break
-        if T.last:
-            break
+    run_test = True
+    while run_test:
+        T = PRE_TESTs(rp_c)
 
-    rp_c.pre_on(0)
-    # T.save_log()
+        for i in range(32):
+            result = T.test()
+            if T.error:
+                print("error")
+                break
+            if T.last:
+                break
+
+        rp_c.pre_on(0)
+        T.save_log()
+
+        termios.tcflush(sys.stdin, termios.TCIOFLUSH)
+        print("Press ENTER or SPACE to run test again, or any other key to exit.")
+        c = getch.getch()
+
+        run_test = False
+        if c == "\r" or c == "\n" or c == " ":
+            run_test = True
