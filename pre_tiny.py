@@ -323,8 +323,8 @@ if __name__ == "__main__":
         rp_c.pre_on(0)
         # T.save_log()
 
-        print("Press ENTER or SPACE to run test again, or any other key to exit.")
         termios.tcflush(sys.stdin, termios.TCIOFLUSH)
+        print("Press ENTER or SPACE to run test again, or any other key to exit.", flush=True)
         c = getch()
 
         run_test = False
