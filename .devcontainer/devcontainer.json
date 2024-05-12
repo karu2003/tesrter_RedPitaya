@@ -12,7 +12,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "sudo apt update && sudo apt install iputils-ping libgl1-mesa-glx qtwayland5 python3-pyqtgraph python3-pyqt5 qttools5-dev-tools qttools5-dev -y && pip install --upgrade pip && pip install pyqt5 && pip install pyqtgraph && pip install ping3 && pip install matplotlib && pip install scipy && pip install pandas",
+	"postCreateCommand": "/bin/bash install.sh && pip3 install -r requirements.txt",
 
 	// Configure tool-specific properties.
 	// "customizations": {},
@@ -47,7 +47,9 @@
 				"mechatroner.rainbow-csv",
 				"ms-toolsai.jupyter",
 				"ms-toolsai.jupyter-keymap",
-				"ms-python.black-formatter"
+				"ms-python.black-formatter",
+				"GitHub.copilot",
+				"GitHub.copilot-chat"
 			]
 		}
 	},

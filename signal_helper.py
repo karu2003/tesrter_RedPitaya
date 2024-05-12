@@ -65,6 +65,29 @@ def chirp_l(
     x0 = np.cos(phase + phi) * ampl
     return t, x0
 
+def gen_signals_sequence(frequencies, duration=0.0001, sample_rate=10e6):
+    # Initialize signal and time arrays
+    signal = np.array([])
+    t = np.array([])
+
+    # Initialize phase
+    phase = 0
+
+    # Generate signals
+    for i, freq in enumerate(frequencies):
+        t_i = np.arange(i*duration, (i+1)*duration, 1/sample_rate)  # Time array for current signal
+        signal_i = np.sin(2 * np.pi * freq * (t_i - i*duration) + phase)  # Generate signal with phase shift
+        phase += 2 * np.pi * freq * duration  # Update phase for next signal
+
+        # Concatenate current signal and time array to the total signal and time arrays
+        signal = np.concatenate((signal, signal_i))
+        t = np.concatenate((t, t_i))
+
+    return t, signal
+
+# frequencies = [100e3, 150e3, 200e3, 250e3, 300e3]  # List of frequencies
+# t, signal = gen_signals_sequence(frequencies)
+
 
 def x_edge(data, thresh=0.2):
     mask1 = (data[:-1] < thresh) & (data[1:] > thresh)

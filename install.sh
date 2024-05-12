@@ -1,0 +1,1 @@
+sudo apt update && sudo apt install iputils-ping libgl1-mesa-glx qtwayland5 python3-pyqtgraph python3-pyqt5 qttools5-dev-tools qttools5-dev -y

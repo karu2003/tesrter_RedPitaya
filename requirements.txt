@@ -1,0 +1,7 @@
+pyqt5 
+pyqtgraph 
+ping3 
+matplotlib 
+scipy 
+pandas
+pyyaml
