@@ -150,7 +150,7 @@ class RedCtl:
         self.dec = dec
 
     def set_gen(self, wave_form="square", freq=500000, ampl=0.5):
-        # wave_form "sine" "square"
+        """ wave form sine square """
         self.rp_s.tx_txt("GEN:RST")
         self.rp_s.sour_set(1, wave_form, ampl, freq)
         self.rp_s.tx_txt("OUTPUT1:STATE ON")
@@ -258,11 +258,11 @@ class RedCtl:
         self.rp_s.tx_txt("GEN:RST")
         # for i, text in enumerate(data):
         #     z += str(text) + ', '
-        self.rp_s.tx_txt("SOUR1:FUNC ARBITRARY")
-        self.rp_s.tx_txt("SOUR1:TRAC:DATA:DATA " + waveform_ch_1)
-        self.rp_s.tx_txt("SOUR1:FREQ:FIX " + str(freq))
-        self.rp_s.tx_txt("SOUR1:VOLT " + str(ampl))
-        self.rp_s.tx_txt("OUTPUT1:STATE ON")
+        self.rp_s.tx_txt(("SOUR1:FUNC ARBITRARY").replace("1", str(ch), 1))
+        self.rp_s.tx_txt(("SOUR1:TRAC:DATA:DATA " + waveform_ch_1).replace("1", str(ch), 1))
+        self.rp_s.tx_txt(("SOUR1:FREQ:FIX " + str(freq)).replace("1", str(ch), 1))
+        self.rp_s.tx_txt(("SOUR1:VOLT " + str(ampl)).replace("1", str(ch), 1))
+        # self.rp_s.tx_txt("OUTPUT1:STATE ON")
         self.rp_s.tx_txt("SOUR:TRIG:INT")
         return
 
