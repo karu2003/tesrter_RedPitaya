@@ -11,6 +11,10 @@ ADC1_2_pin = "3"
 SS_GL_pin = "4"
 ES_GL_pin = "5"
 FLG_pin = "7"
+RX_pin = "5"
+SSRinput_pin = "1"
+ESinput_pin = "2"
+SSLinput_pin = "3"
 
 
 class RedCtl:
@@ -33,6 +37,8 @@ class RedCtl:
         self.buffTime = self.buffSize / self.fs  # Max acquisition time
         # self.Nsamples = int(self.fs * self.durationSeconds)
         self.i2cAddress = None
+
+        # disable all GPIO
         self.rp_s.tx_txt("DIG:RST")
         self.rp_s.tx_txt("ACQ:RST")
 
@@ -150,7 +156,7 @@ class RedCtl:
         self.dec = dec
 
     def set_gen(self, wave_form="square", freq=500000, ampl=0.5):
-        """ wave form sine square """
+        """wave form sine square"""
         self.rp_s.tx_txt("GEN:RST")
         self.rp_s.sour_set(1, wave_form, ampl, freq)
         self.rp_s.tx_txt("OUTPUT1:STATE ON")
@@ -175,7 +181,7 @@ class RedCtl:
             1, wave_form, ampl, freq, burst=True, ncyc=ncyc, nor=nor, period=period
         )
         self.gen_on(1)
-        # self.rp_s.tx_txt("OUTPUT:STATE ON")
+        # self.rp_s.tx_txt("OUTPUT:STATE ON"
         time.sleep(2)
         self.rp_s.tx_txt("SOUR1:TRIG:INT")
         time.sleep(2)
@@ -220,6 +226,9 @@ class RedCtl:
     def es_gl(self, value=1):
         self.rp_s.tx_txt("DIG:PIN DIO" + ES_GL_pin + "_N," + str(value))
 
+    def rx_on(self, value=1):
+        self.rp_s.tx_txt("DIG:PIN DIO" + ES_GL_pin + "_N," + str(value))
+
     def set_dir(self):
         for i in range(6):
             self.rp_s.tx_txt("DIG:PIN:DIR OUT,DIO" + str(i) + "_N")
@@ -259,7 +268,9 @@ class RedCtl:
         # for i, text in enumerate(data):
         #     z += str(text) + ', '
         self.rp_s.tx_txt(("SOUR1:FUNC ARBITRARY").replace("1", str(ch), 1))
-        self.rp_s.tx_txt(("SOUR1:TRAC:DATA:DATA " + waveform_ch_1).replace("1", str(ch), 1))
+        self.rp_s.tx_txt(
+            ("SOUR1:TRAC:DATA:DATA " + waveform_ch_1).replace("1", str(ch), 1)
+        )
         self.rp_s.tx_txt(("SOUR1:FREQ:FIX " + str(freq)).replace("1", str(ch), 1))
         self.rp_s.tx_txt(("SOUR1:VOLT " + str(ampl)).replace("1", str(ch), 1))
         # self.rp_s.tx_txt("OUTPUT1:STATE ON")

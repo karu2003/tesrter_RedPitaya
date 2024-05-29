@@ -65,6 +65,7 @@ def chirp_l(
     x0 = np.cos(phase + phi) * ampl
     return t, x0
 
+
 def gen_signals_sequence(frequencies, duration=0.0001, sample_rate=10e6):
     # Initialize signal and time arrays
     signal = np.array([])
@@ -75,8 +76,12 @@ def gen_signals_sequence(frequencies, duration=0.0001, sample_rate=10e6):
 
     # Generate signals
     for i, freq in enumerate(frequencies):
-        t_i = np.arange(i*duration, (i+1)*duration, 1/sample_rate)  # Time array for current signal
-        signal_i = np.sin(2 * np.pi * freq * (t_i - i*duration) + phase)  # Generate signal with phase shift
+        t_i = np.arange(
+            i * duration, (i + 1) * duration, 1 / sample_rate
+        )  # Time array for current signal
+        signal_i = np.sin(
+            2 * np.pi * freq * (t_i - i * duration) + phase
+        )  # Generate signal with phase shift
         phase += 2 * np.pi * freq * duration  # Update phase for next signal
 
         # Concatenate current signal and time array to the total signal and time arrays
@@ -84,6 +89,7 @@ def gen_signals_sequence(frequencies, duration=0.0001, sample_rate=10e6):
         t = np.concatenate((t, t_i))
 
     return t, signal
+
 
 # frequencies = [100e3, 150e3, 200e3, 250e3, 300e3]  # List of frequencies
 # t, signal = gen_signals_sequence(frequencies)
@@ -203,6 +209,14 @@ def voltage_divider(voltage):
     voltage = voltage * ratio
     return voltage
 
+def CQ_330E(voltage):
+    R1 = 12000
+    R2 = 3000
+    Zero_Current = 0.5
+    Sensitivity = 0.2
+    voltage = voltage * ((R1 + R2) / R2)
+    return (voltage - Zero_Current) / Sensitivity
+
 
 def voltage_divider_pre(voltage):
     """
@@ -213,6 +227,19 @@ def voltage_divider_pre(voltage):
     """
     R1 = 6200
     R2 = 2700
+    voltage = voltage * ((R1 + R2) / R2)
+    return voltage
+
+def voltage_divider_KV(ch, voltage):
+    if ch == 2:
+        R1 = 1.5e6
+        R2 = 6e3
+        R3 = 2e3
+        # two resistors in parallel
+        R2 = 1 / (1 / R2 + 1 / R3)
+    else:
+        R1 = 2e6
+        R2 = 4e3
     voltage = voltage * ((R1 + R2) / R2)
     return voltage
 
