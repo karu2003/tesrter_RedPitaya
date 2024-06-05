@@ -16,6 +16,13 @@ SSRinput_pin = "1"
 ESinput_pin = "2"
 SSLinput_pin = "3"
 
+waveforms = {}
+waveforms["es"] = {"wave_form": "sine", "freq": 250e3, "ampl": 0.5}
+waveforms["ss"] = {"wave_form": "sine", "freq": 500e3, "ampl": 1}
+waveform_types = waveforms.keys()
+
+channels = {"ssr": 1, "es": 2, "ssl": 3}
+channel_types = channels.keys()
 
 class RedCtl:
     """RedPitaya ctrl class
@@ -23,6 +30,8 @@ class RedCtl:
     """
 
     def __init__(self, ip="192.168.0.15", trig=0.2, dec=1, ch=1):
+        self.waveforms = waveforms
+        self.channels = channels
 
         self.data = []
         self.ip = ip
