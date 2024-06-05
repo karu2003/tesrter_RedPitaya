@@ -7,7 +7,10 @@ if __name__ == "__main__":
 
     dec = 32
     rp_c = redpctl.RedCtl(dec=dec)
+    rp_c.init()
+
     frequencies = [250e3, 500e3]
+
     rp_c.gen_on(1)
     # Power on
     rp_c.set_power(1)

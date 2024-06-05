@@ -38,6 +38,8 @@ class RedCtl:
         # self.Nsamples = int(self.fs * self.durationSeconds)
         self.i2cAddress = None
 
+    def init(self):
+        print("init()")
         # disable all GPIO
         self.rp_s.tx_txt("DIG:RST")
         self.rp_s.tx_txt("ACQ:RST")

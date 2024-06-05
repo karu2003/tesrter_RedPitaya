@@ -10,6 +10,7 @@ if __name__ == "__main__":
     nrows = 1
     thresh = 0.065
     rp_c = redpctl.RedCtl(dec=dec, trig=thresh)
+    rp_c.init()
     rp_c.set_power(1)
 
     # IMPORTANT!!!! for TX test RX relay should be OFF
