@@ -29,12 +29,11 @@ class RedCtl:
         self.rp_s = scpi.scpi(self.ip)
         self.trig_lev = trig
         self.trig_ch = ch
-        self.dec = dec
-        sampleClock = 125e6
+
+        self.sampleClock = 125e6
         self.buffSize = 16384  # 2**14
-        self.fs = sampleClock / self.dec  # sampling frequency
-        # self.n=(int)(self.fs/self.fsweep)      # number of datapoints per ramp
-        self.buffTime = self.buffSize / self.fs  # Max acquisition time
+        self.set_dec(dec)
+
         # self.Nsamples = int(self.fs * self.durationSeconds)
         self.i2cAddress = None
 
@@ -156,6 +155,9 @@ class RedCtl:
 
     def set_dec(self, dec=1):
         self.dec = dec
+        self.fs = self.sampleClock / self.dec    # sampling frequency
+        # self.n=(int)(self.fs/self.fsweep)      # number of datapoints per ramp
+        self.buffTime = self.buffSize / self.fs  # Max acquisition time
 
     def set_gen(self, wave_form="square", freq=500000, ampl=0.5):
         """wave form sine square"""
