@@ -5,16 +5,18 @@ if __name__ == "__main__":
     import numpy as np
     import matplotlib.pyplot as plt
 
-    dec = 128
+    dec = 64
     rx_buffer_size = 16384
     nrows = 1
-    thresh = 0.065
+    thresh = 0.2
     rp_c = redpctl.RedCtl(dec=dec, trig=thresh)
+    
+    rp_c.init_DIG()
     rp_c.init()
     rp_c.set_power(1)
 
     # IMPORTANT!!!! for TX test RX relay should be OFF
-    # turn off the RX relay
+    # turn off the RX relays
     rp_c.rx_on(0)
     rp_c.set_ch(0)
     sample_rate = rp_c.fs
@@ -54,13 +56,13 @@ if __name__ == "__main__":
                     f"Voltage +-: {max_voltage:.2f} on channel {key} and PP: {peak_to_peak:.2f}"
                 )
 
-                # fig, (ax1, ax2) = plt.subplots(2, 1)
-                # ax1.plot(voltage_period)
-                # ax1.set_title("Voltage channel " + key)
+                fig, (ax1, ax2) = plt.subplots(2, 1)
+                ax1.plot(voltage_period)
+                ax1.set_title("Voltage channel " + key)
 
-                # ax2.plot(current_period)
-                # ax2.set_title("Current " + key)
-                # plt.show()
+                ax2.plot(current_period)
+                ax2.set_title("Current " + key)
+                plt.show()
                 time.sleep(2)
 
         except KeyboardInterrupt:

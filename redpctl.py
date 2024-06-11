@@ -135,7 +135,7 @@ class RedCtl:
         self.rp_s = scpi.scpi(self.ip)
         self.trig_lev = trig
         self.trig_ch = ch
-
+        self.sampleClock = 125e6
         self.set_dec(dec)
 
         # self.Nsamples = int(self.fs * self.durationSeconds)
@@ -152,6 +152,13 @@ class RedCtl:
         self.rp_s.tx_txt("ACQ:TRIG:DLY 0")
         self.rp_s.tx_txt("ACQ:TRIG:LEV %d" % self.trig_lev)
 
+    def init_DIG(self):
+        log.trace("init_DIG()")
+        # disable all GPIO
+        self.rp_s.tx_txt("DIG:RST")
+        self.spi_init()
+        self.set_dir()
+
     def read(self, quantity=800, counter=50):
         log.trace(f"read(quantity={quantity}, counter={counter})")
 
@@ -161,6 +168,7 @@ class RedCtl:
         self.rp_s.tx_txt("ACQ:START")
         time.sleep(0.05)
         self.rp_s.tx_txt("ACQ:TRIG CH%d_PE" % self.trig_ch)
+        # self.rp_s.tx_txt("ACQ:TRig:DLY 16384")
 
         for i in range(counter):
 
@@ -194,6 +202,20 @@ class RedCtl:
             self.rp_s.tx_txt("ACQ:STOP")
 
         return self.data
+
+    def read_level(self, level=0.2):
+        log.trace(f"read_level({level})")
+        mean_data = 0.0
+        cnt = 0
+        while mean_data >= level:
+            level_data = []
+            level_data = self.read_now()
+            mean_data = np.abs(np.mean(level_data))
+            print(mean_data)
+            cnt += 1
+            if cnt == 100:
+                return -1
+        return level_data
 
     def read_oneL0(self):
         log.trace("read_oneL0()")
@@ -255,7 +277,9 @@ class RedCtl:
 
         self.trig_lev = trig_lev
         self.trig_ch = ch
+        # print("ACQ:TRIG CH%d_PE" % self.trig_ch)
         self.rp_s.tx_txt("ACQ:TRIG:LEV %d" % self.trig_lev)
+        # self.rp_s.tx_txt("ACQ:TRIG CH%d_PE" % self.trig_ch)
 
     def set_dec(self, dec=1):
         log.trace(f"set_dec({dec})")
@@ -311,6 +335,17 @@ class RedCtl:
             self.rp_s.tx_txt("DIG:PIN DIO" + str(i) + "_" + pol + "," + str(0))
         if ch != 0:
             self.rp_s.tx_txt("DIG:PIN DIO" + str(ch) + "_" + pol + "," + str(value))
+
+    def set_ch_SS(self, ch, value=1, pol="N"):
+        log.trace(f"set_ch_SS({ch})")
+        for i in range(4):
+            self.rp_s.tx_txt("DIG:PIN DIO" + str(i) + "_" + pol + "," + str(0))
+        if ch == 1 or ch == 3:
+            self.rp_s.tx_txt("DIG:PIN DIO" + str(1) + "_" + pol + "," + str(value))
+            self.rp_s.tx_txt("DIG:PIN DIO" + str(3) + "_" + pol + "," + str(value))
+        if ch == 2:
+            self.rp_s.tx_txt("DIG:PIN DIO" + str(2) + "_" + pol + "," + str(value))
+
 
     def set_power(self, value=1):
         log.trace(f"set_power({value})")
@@ -557,6 +592,7 @@ setup_argparse_subparsers = []
 ###### command 'init' ######
 def do_init(args):
     redpctl, args = args
+    redpctl.init_DIG()
     redpctl.init()
 
 
@@ -677,6 +713,7 @@ setup_argparse_subparsers.append({"callback": setup_argparse_relay})
 ###### command 'tx-test' ######
 def do_tx_test(args):
     redpctl, args = args
+    redpctl.init()
 
     ch = redpctl.channels[args.channel]
     redpctl.set_dec(128)
@@ -684,25 +721,25 @@ def do_tx_test(args):
 
     print(f"======== test channel {args.channel} ========")
     redpctl.set_ch(ch)
-    thresh_level = 0.045
-    cnt = 0
-    sub = 0.0
+    # thresh_level = 15.0
+    # cnt = 0
+    # sub = 0.0
     time.sleep(0.1)
-    while True:
-        data = redpctl.read(counter=1, quantity=16384)
-        data = np.array(data)
-        real_current = np.real(sh.CQ_330E(voltage=data[1]))
-        real_voltage = np.real(sh.voltage_divider_KV(ch, data[0]))
-        sub = np.abs(np.mean(real_voltage))
-        # print(f"sub: {sub:.2f}")
-        cnt += 1
-        if sub >= thresh_level:
-            break
-        if cnt == 20:
-            break
+    # while True:
+    data = redpctl.read(counter=1, quantity=16384)
+    data = np.array(data)
+    real_current = np.real(sh.CQ_330E(voltage=data[1]))
+    real_voltage = np.real(sh.voltage_divider_KV(ch, data[0]))
+        # sub = np.abs(sh.rms(real_voltage))
+        # # print(f"sub: {sub:.2f}")
+        # cnt += 1
+        # if sub >= thresh_level:
+        #     break
+        # if cnt == 20:
+        #     break
 
     try:
-        rising_edge, falling_edge = sh.x_edge(real_voltage, thresh=20)
+        rising_edge, falling_edge = sh.x_edge(real_voltage, thresh=10)
         voltage_period = real_voltage[rising_edge[0] : rising_edge[-1]]
         current_period = real_current[rising_edge[0] : rising_edge[-1]]
     except Exception as e:

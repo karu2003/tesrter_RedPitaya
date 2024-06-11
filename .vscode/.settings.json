@@ -3,4 +3,8 @@
     "editor.insertSpaces": "true",
     "editor.detectIndentation": true,
     "security.workspace.trust.enabled": false
+
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    }
 }
