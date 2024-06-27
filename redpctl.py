@@ -203,6 +203,50 @@ class RedCtl:
 
         return self.data
 
+    def read_ex(self, quantity=800, counter=50):
+        log.trace(f"read(quantity={quantity}, counter={counter})")
+
+        self.data.clear()
+        self.rp_s.tx_txt("ACQ:DEC %d" % self.dec)
+
+        self.rp_s.tx_txt("ACQ:START")
+        time.sleep(0.05)
+        self.rp_s.tx_txt("ACQ:TRig:EXT:LEV 1")
+        self.rp_s.tx_txt("ACQ:TRig EXT_NE")
+
+        for i in range(counter):
+
+            while 1:
+                self.rp_s.tx_txt("ACQ:TRIG:STAT?")
+                if self.rp_s.rx_txt() == "TD":
+                    break
+
+            while 1:
+                self.rp_s.tx_txt("ACQ:TRIG:FILL?")
+                if self.rp_s.rx_txt() == "1":
+                    break
+
+            self.rp_s.tx_txt("ACQ:SOUR1:DATA:OLD:N? " + str(quantity))
+
+            buff_string = self.rp_s.rx_txt()
+            buff_string = buff_string.strip("{}\n\r").replace("  ", "").split(",")
+            buff = list(map(float, buff_string))
+            arr = np.array(buff)
+            self.data.append(arr)
+
+            self.rp_s.tx_txt("ACQ:SOUR2:DATA:OLD:N? " + str(quantity))
+
+            buff_string = self.rp_s.rx_txt()
+            buff_string = buff_string.strip("{}\n\r").replace("  ", "").split(",")
+            buff = list(map(float, buff_string))
+            arr = np.array(buff)
+            self.data.append(arr)
+
+            # data = np.append(data,np.array(buff))
+            self.rp_s.tx_txt("ACQ:STOP")
+
+        return self.data
+
     def read_level(self, level=0.2):
         log.trace(f"read_level({level})")
         mean_data = 0.0
@@ -726,7 +770,7 @@ def do_tx_test(args):
     # sub = 0.0
     time.sleep(0.1)
     # while True:
-    data = redpctl.read(counter=1, quantity=16384)
+    data = redpctl.read_ex(counter=1, quantity=16384)
     data = np.array(data)
     real_current = np.real(sh.CQ_330E(voltage=data[1]))
     real_voltage = np.real(sh.voltage_divider_KV(ch, data[0]))
@@ -739,7 +783,7 @@ def do_tx_test(args):
         #     break
 
     try:
-        rising_edge, falling_edge = sh.x_edge(real_voltage, thresh=10)
+        rising_edge, falling_edge = sh.x_edge(real_voltage, thresh=40)
         voltage_period = real_voltage[rising_edge[0] : rising_edge[-1]]
         current_period = real_current[rising_edge[0] : rising_edge[-1]]
     except Exception as e:

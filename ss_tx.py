@@ -29,10 +29,11 @@ if __name__ == "__main__":
                 print(f"turn channel {key}")
                 rp_c.set_ch(value)
                 time.sleep(0.1)
-                data = rp_c.read(counter=nrows, quantity=rx_buffer_size)
+                data = rp_c.read_ex(counter=nrows, quantity=rx_buffer_size)
                 data = np.array(data)
                 real_current = np.real(sh.CQ_330E(voltage=data[1]))
                 real_voltage = np.real(sh.voltage_divider_KV(value, data[0]))
+
 
                 try:
                     rising_edge, falling_edge = sh.x_edge(real_voltage, thresh=30)
