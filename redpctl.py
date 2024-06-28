@@ -760,10 +760,13 @@ def do_tx_test(args):
     redpctl.init()
 
     ch = redpctl.channels[args.channel]
-    redpctl.set_dec(128)
+    # redpctl.set_dec(64) #128
     redpctl.set_trig(trig_lev=0.065, ch=1)
 
     print(f"======== test channel {args.channel} ========")
+    redpctl.set_dec(32)
+    if ch == 2:
+        redpctl.set_dec(64)
     redpctl.set_ch(ch)
     # thresh_level = 15.0
     # cnt = 0
@@ -783,8 +786,8 @@ def do_tx_test(args):
         #     break
 
     try:
-        rising_edge, falling_edge = sh.x_edge(real_voltage, thresh=40)
-        voltage_period = real_voltage[rising_edge[0] : rising_edge[-1]]
+        rising_edge, falling_edge = sh.x_edge(real_voltage, thresh=30)
+        voltage_period = real_voltage[rising_edge[2] : rising_edge[-1]]
         current_period = real_current[rising_edge[0] : rising_edge[-1]]
     except Exception as e:
         print(f"Something went wrong: {e}")

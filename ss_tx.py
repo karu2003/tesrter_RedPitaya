@@ -27,6 +27,11 @@ if __name__ == "__main__":
         try:
             for key, value in channel_dict.items():
                 print(f"turn channel {key}")
+                rp_c.set_dec(32)
+                if key == "ES":
+                    print(key)
+                    rp_c.set_dec(64)
+
                 rp_c.set_ch(value)
                 time.sleep(0.1)
                 data = rp_c.read_ex(counter=nrows, quantity=rx_buffer_size)
@@ -37,7 +42,7 @@ if __name__ == "__main__":
 
                 try:
                     rising_edge, falling_edge = sh.x_edge(real_voltage, thresh=30)
-                    voltage_period = real_voltage[rising_edge[0] : rising_edge[-1]]
+                    voltage_period = real_voltage[rising_edge[2] : rising_edge[-1]]
                     current_period = real_current[rising_edge[0] : rising_edge[-1]]
                 except:
                     print("Something went wrong.")
