@@ -16,7 +16,7 @@ def generate_chirp(f0, f1, t, fs):
     return chirp(t, f0=f0, f1=f1, t1=t[-1], method="linear")
 
 
-# Generate the signal
+# Function to generate the signal
 def generate_signal(fs, t1, t2, pause):
     signal = []
 
@@ -46,3 +46,4 @@ if __name__ == "__main__":
     plt.title("Resulting Signal")
     plt.xlabel("Sample")
     plt.ylabel("Amplitude")
+    plt.show()
