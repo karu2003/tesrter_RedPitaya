@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import chirp
 from scipy.io.wavfile import write
+from nptdms import TdmsWriter, ChannelObject
 
 # Signal parameters
 fs = 96000  # Sampling frequency
@@ -44,9 +45,17 @@ if __name__ == "__main__":
 
         # Normalize the signal to the range [-1, 1]
     signal = signal / np.max(np.abs(signal))
+    # write("1834_cs1.wav", fs, signal.astype(np.float32))
 
+    signal = signal * 8192
+    signal = signal.astype(np.int16)
     # Save the signal as a WAV file
-    write("1834_cs1.wav", fs, signal.astype(np.float32))
+    write("1834_cs1.wav", fs, signal)
+
+    with TdmsWriter("1834_cs1.tdms") as tdms_writer:
+        channel = ChannelObject("Group", "Signal", signal)
+        tdms_writer.write_segment([channel])
+    
 
 
     # Display the resulting signal
