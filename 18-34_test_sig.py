@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import chirp
+from scipy.io.wavfile import write
 
 # Signal parameters
 fs = 96000  # Sampling frequency
@@ -40,6 +41,13 @@ if __name__ == "__main__":
 
     # Signal generation
     signal = generate_signal(fs, t1, t2, pause)
+
+        # Normalize the signal to the range [-1, 1]
+    signal = signal / np.max(np.abs(signal))
+
+    # Save the signal as a WAV file
+    write("1834_cs1.wav", fs, signal.astype(np.float32))
+
 
     # Display the resulting signal
     plt.plot(signal)
