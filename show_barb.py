@@ -91,6 +91,7 @@ intervals = find_chirp_intervals(
 )
 
 freqs, out = fcwt.cwt(signal_data, int(sample_rate), f0, f1, fn)
+print(f"Shape of out: {out.shape}")
 
 # print(intervals)
 
@@ -116,14 +117,18 @@ ax1.set_xlabel("Sample Number")
 ax1.set_ylabel("Signal Amplitude")
 ax1.grid(True)
 
-time_extent = [0, len(signal_data) / sample_rate]
+# time_extent = [0, len(signal_data) / sample_rate]
+time_extent = [0, len(out[:,:18000]) / sample_rate]
+
 
 # Построение графика вейвлет-преобразования
 # ax2.imshow(np.abs(out), aspect="auto", extent=[0, len(signal_data), f0, f1])
-ax2.imshow(np.abs(out), aspect="auto", extent=[time_extent[0], time_extent[1], f0, f1])
+# ax2.imshow(np.abs(out), aspect="auto", extent=[time_extent[0], time_extent[1], f0, f1])
+# ax2.imshow(np.abs(out[:,:25000]), aspect="auto", extent=[time_extent[0], time_extent[1], f0, f1], interpolation='none')
+ax2.imshow(np.abs(out), aspect="auto", extent=[time_extent[0], time_extent[1], f0, f1], interpolation='none')
 
 # ax2.set_title("Wavelet Transform")
-# ax2.set_xlabel("Sample Number")
+# ax2.set_xlabel("Sample Number")s
 # ax2.set_ylabel("Frequency (Hz)")
 # fig.colorbar(
 #     ax2.imshow(np.abs(out), aspect="auto", extent=[0, len(signal_data), f0, f1]), ax=ax2

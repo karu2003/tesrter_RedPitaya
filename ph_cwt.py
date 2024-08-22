@@ -2,58 +2,104 @@ import numpy as np
 import matplotlib.pyplot as plt
 import fcwt
 
-# Параметры сигнала
-f0 = 7000           # начальная частота (Гц)
-f1 = 17000           # конечная частота (Гц)
-T = 0.016            # длительность сигнала (с)
-fs = 96000           # частота дискретизации (Гц)
-num_segments = 8      # количество изменений направления чирпа
 
-t = np.linspace(0, T, int(T * fs))  # временной вектор
-segment_duration = T / num_segments  # длительность одного сегмента
-frequencies = np.linspace(f0, f1, num_segments + 1)  # Частоты на границах сегментов
+def generate_sin_chirp(
+    f_start, f_end, T, fs, num_sine_periods, amp_reduction_factor=1.0, fn=128
+):
+    """
+    Генерирует чирп-сигнал с синусоидальным изменением частоты.
 
-chirp_signal = np.array([])  # Инициализация итогового сигнала
+    Parameters:
+    - f_start: начальная частота (Гц)
+    - f_end: конечная частота (Гц)
+    - T: длительность сигнала (с)
+    - fs: частота дискретизации (Гц)
+    - num_sine_periods: количество периодов синусоидального изменения частоты
+    - amp_reduction_factor: коэффициент уменьшения амплитуды синусоидальной модуляции
+    - fn: количество частотных бинов для вейвлет-преобразования
 
-# Генерация чирп-сигнала с 8 сегментами
-for i in range(num_segments):
-    t_segment = np.linspace(0, segment_duration, int(segment_duration * fs))
+    Returns:
+    - chirp_signal: сгенерированный чирп-сигнал
+    - t: временной вектор
+    - cwt_matrix: матрица вейвлет-преобразования
+    - freqs: частоты для вейвлет-преобразования
+    """
+    # Создание временного вектора
+    t = np.linspace(0, T, int(T * fs), endpoint=False)
 
-    # Падение частоты от текущей частоты до нижней границы сегмента
-    freq_start = frequencies[i]
-    freq_end = frequencies[i+1]
-    amplitude = (freq_start + freq_end) / 2  # Амплитуда пропорциональна средней частоте сегмента
-    chirp_segment = amplitude * np.cos(2 * np.pi * (freq_start * t_segment + 
-                    (freq_end - freq_start) / (2 * segment_duration) * t_segment**2))
-    
-    # Добавление сегмента в общий сигнал
-    chirp_signal = np.concatenate((chirp_signal, chirp_segment))
+    # Определение частоты синусоиды, чтобы получить указанное количество периодов
+    sine_freq = num_sine_periods / T
+
+    # Линейное изменение частоты от начальной до конечной частоты
+    freq_linear = np.linspace(f_start, f_end, len(t))
+
+    # Синусоидальное изменение частоты с уменьшенной амплитудой
+    amp = (f_start - f_end) / 2 * amp_reduction_factor
+    freq_sine = (f_start + f_end) / 2
+    freq_sine_modulated = freq_sine + amp * np.sin(2 * np.pi * sine_freq * t)
+
+    # Изменение частоты: линейное изменение с синусоидальным модулем
+    freq_t = freq_linear + freq_sine_modulated - freq_sine
+
+    # Интегрируем частоту для получения фазы
+    phase = 2 * np.pi * np.cumsum(freq_t) / fs
+
+    # Генерация чирп-сигнала
+    chirp_signal = np.cos(phase)
+
+    # Применение вейвлет-преобразования
+    freqs, cwt_matrix = fcwt.cwt(chirp_signal, fs, f_start, f_end, fn)
+
+    return chirp_signal, t, freqs, cwt_matrix
 
 
+def plot_results(t, chirp_signal, cwt_matrix, freqs, T):
+    """
+    Визуализирует чирп-сигнал и результаты вейвлет-преобразования.
 
-# Временной вектор для всего сигнала
-t_total = np.linspace(0, T * num_segments, chirp_signal.size)
+    Parameters:
+    - t: временной вектор
+    - chirp_signal: сгенерированный чирп-сигнал
+    - cwt_matrix: матрица вейвлет-преобразования
+    - f_start: начальная частота (Гц)
+    - f_end: конечная частота (Гц)
+    - T: длительность сигнала (с)
+    """
+    fig, ax = plt.subplots(2, 1, sharex=True, figsize=(12, 8))
 
-# Применение вейвлет-преобразования
-freqs, cwt_matrix = fcwt.cwt(chirp_signal , fs, f0, f1, fn=128)
+    ax[0].plot(t, chirp_signal)
+    ax[0].set_title("Чирп-сигнал с синусоидальным изменением частоты")
+    ax[0].set_xlabel("Время (с)")
+    ax[0].set_ylabel("Амплитуда")
 
-# Визуализация результатов
-fig, ax = plt.subplots(3, 1, sharex=True, figsize=(12, 8))
+    ax[1].imshow(
+        np.abs(cwt_matrix),
+        aspect="auto",
+        interpolation="none",
+        extent=[0, T, freqs[0], freqs[-1]],
+    )
+    ax[1].set_title("Амплитуда вейвлет-преобразования")
+    ax[1].set_xlabel("Время (с)")
+    ax[1].set_ylabel("Частота (Гц)")
 
-ax[0].plot(t_total, chirp_signal)
-ax[0].set_title("Исходный чирп-сигнал")
-ax[0].set_xlabel("Время (с)")
-ax[0].set_ylabel("Амплитуда")
+    plt.tight_layout()
+    plt.show()
 
-# ax[1].plot(t, chirp_pm_signal)
-# ax[1].set_title("Фазово модулированный чирп-сигнал")
-# ax[1].set_xlabel("Время (с)")
-# ax[1].set_ylabel("Амплитуда")
 
-ax[2].imshow(np.abs(cwt_matrix), aspect="auto", extent=[0, T, f0, f1])#, cmap="jet")
-ax[2].set_title("Амплитуда вейвлет-преобразования")
-ax[2].set_xlabel("Время (с)")
-ax[2].set_ylabel("Частота (Гц)")
+if __name__ == "__main__":
+    # Пример использования функции
+    f_start = 17000  # начальная частота (Гц)
+    f_end = 7000  # конечная частота (Гц)
+    T = 0.0165  # длительность сигнала (с)
+    fs = 96000  # частота дискретизации (Гц)
+    num_sine_periods = 8  # количество периодов синусоидального изменения частоты
+    amp_reduction_factor = (
+        0.2  # коэффициент уменьшения амплитуды синусоидальной модуляции
+    )
 
-plt.tight_layout()
-plt.show()
+    chirp_signal, t, freqs, cwt_matrix = generate_sin_chirp(
+        f_start, f_end, T, fs, num_sine_periods, amp_reduction_factor
+    )
+    # freqs = freqs[::-1]
+    cwt_matrix = cwt_matrix[::-1, :]
+    plot_results(t, chirp_signal, cwt_matrix, freqs, T)
